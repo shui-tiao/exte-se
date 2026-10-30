@@ -1,0 +1,10 @@
+{
+  "ad": {
+    "message": "EXTE SE — 2FA 身份验证器（支持加密备份）",
+    "description": "Chrome 和应用商店中显示的扩展名称"
+  },
+  "aciklama": {
+    "message": "在 Chrome 中直接获取两步验证代码。导入 Google Authenticator 账户、扫描二维码、进行加密备份。",
+    "description": "应用商店中显示的简短描述"
+  }
+}
