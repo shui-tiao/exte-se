@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { baglantiUret, baglantiCoz, BAGLANTI_SURUMU, BAGLANTI_MAKS_UZUNLUK } from "../src/baglanti.js";
+import { baglantiUret, baglantiCoz, baglantiAyikla, BAGLANTI_SURUMU, BAGLANTI_MAKS_UZUNLUK } from "../src/baglanti.js";
 
 const YAPILANDIRMA = {
   hesaplar: [
@@ -90,4 +90,35 @@ test("sürüm yüksekse şifre çözülmeden reddediliyor", async () => {
     () => baglantiCoz({ ...kayit, v: String(BAGLANTI_SURUMU + 1) }, "cokgizli"),
     /v2|v1/,
   );
+});
+
+test("yapıştırılan tam URL, #exte? ve çıplak exte? biçimleri aynı kaydı veriyor", async () => {
+  const { url } = await baglantiUret(YAPILANDIRMA, "cokgizli");
+  const tam = baglantiAyikla(url);
+  const hash = baglantiAyikla(new URL(url).hash);
+  const ciplak = baglantiAyikla(new URL(url).hash.slice(1));
+  for (const kayit of [tam, hash, ciplak]) {
+    assert.equal(kayit.v, String(BAGLANTI_SURUMU));
+    assert.equal(kayit.kaynak, "link");
+    assert.ok(kayit.s.length >= 20);
+    assert.ok(kayit.d.length >= 24);
+  }
+  assert.deepEqual(hash, tam);
+  assert.deepEqual(ciplak, tam);
+});
+
+test("boş veya eksik bağlantı reddediliyor", () => {
+  assert.throws(() => baglantiAyikla(""), /paste|yapıştır|粘贴/i);
+  assert.throws(
+    () => baglantiAyikla("https://shui-tiao.github.io/exte-se/#exte?v=1&i=310000&s=abc&d=abc"),
+    /incorrect or the link is damaged|yanlış|不正确/i,
+  );
+  assert.throws(() => baglantiAyikla("https://example.com/"), /incorrect or the link is damaged|yanlış|不正确/i);
+});
+
+test("yüksek sürümlü bağlantı ayrıştırılıyor ama çözülmüyor", async () => {
+  const { url } = await baglantiUret(YAPILANDIRMA, "cokgizli");
+  const kayit = baglantiAyikla(url.replace("v=1", "v=2"));
+  assert.equal(kayit.surum, "2");
+  await assert.rejects(() => baglantiCoz(kayit, "cokgizli"), /v2|v1/);
 });

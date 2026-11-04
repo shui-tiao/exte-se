@@ -117,11 +117,7 @@
     font-size:12.5px;line-height:1.55}
   .bar b{font-size:12.5px;font-weight:700}
   .bar span{grid-column:1;color:var(--mute)}
-  .bar--warn{border-left-color:#c99a2e;background:#fbf3d9}
   .bar--bad{border-left-color:#c93a12;background:#fbe9e4}
-  .bar__btn{grid-row:1 / span 2;grid-column:2;height:32px;padding:0 12px;border:1px solid var(--kenar-koyu);
-    border-radius:1px;background:var(--yuzey);color:var(--metin);font-size:11.5px;font-weight:700;white-space:nowrap}
-  .bar__btn:hover{border-color:var(--metin)}
   .card{border:1px solid var(--kenar-koyu);background:var(--yuzey)}
   .card__head{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--kenar)}
   .card__badge{font-family:var(--mono);font-size:8px;letter-spacing:.09em;text-transform:uppercase;
@@ -138,6 +134,14 @@
   .ghost:hover{color:var(--metin);border-color:var(--metin)}
   .icev__note{flex-basis:100%;margin:2px 0 0;font-family:var(--mono);font-size:8px;letter-spacing:.05em;
     text-transform:uppercase;color:var(--mute)}
+  .icev__manual{margin-top:12px;padding:13px 16px 15px;border:1px solid var(--kenar);background:var(--yuzey)}
+  .icev__manual-baslik{margin:0 0 6px;font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--mute)}
+  .icev__adimlar{margin:0;padding:0;list-style:none}
+  .icev__adimlar li{display:grid;grid-template-columns:20px minmax(0,1fr);gap:0 10px;padding:5px 0}
+  .icev__adimlar .n{font-family:var(--mono);font-size:9px;color:var(--marka);padding-top:2px}
+  .icev__adimlar b{display:block;font-size:12.5px;font-weight:700;line-height:1.45}
+  .icev__adimlar span:not(.n){display:block;font-size:11.5px;color:var(--mute);line-height:1.5}
 
   @media (max-width:900px){
     .shell{grid-template-rows:60px minmax(0,1fr) 44px;padding:0 20px}
@@ -247,13 +251,7 @@
     <section class="icev" id="iceAktarma" aria-labelledby="icevBaslik" hidden>
       <p class="kicker"><i></i>CONFIG LINK · AES-256-GCM</p>
       <h1 class="icev__title" id="icevBaslik">导入配置链接</h1>
-      <p class="lede">这条链接由 EXTE SE 扩展生成，里面是加密后的账户与设置。本页只做识别与确认：不解密、不写入、不发送任何内容。</p>
-
-      <div class="bar bar--warn" id="barYok" role="status" hidden>
-        <b>未检测到 EXTE SE 扩展</b>
-        <span>安装后刷新此页，再把链接打开一次。</span>
-        <button type="button" class="bar__btn" data-todo="安装入口待填：商店尚未上架，暂用开发者模式加载。">安装扩展</button>
-      </div>
+      <p class="lede">这条链接由 EXTE SE 扩展生成，里面是加密后的账户与设置。本页不解密、不写入、不发送任何内容；复制链接后到扩展设置页完成导入。</p>
 
       <div class="bar bar--bad" id="barBozuk" role="alert" hidden>
         <b>链接不完整或已损坏</b>
@@ -273,12 +271,28 @@
           <div><dt>密码</dt><dd>导入时需要导出时设置的密码；链接内不含密码</dd></div>
         </dl>
         <div class="card__foot">
-          <button type="button" class="cta cta--sm" id="icevOnay">
-            导入到扩展 <span class="arw">→</span>
-          </button>
+          <button type="button" class="cta cta--sm" id="icevKopyala">复制配置链接</button>
           <button type="button" class="ghost" id="icevKapat">取消并关闭</button>
-          <p class="icev__note">只导入你本人生成的链接。确认后密文会发送到已安装的扩展，在设置页输入密码并选择覆盖或合并。</p>
+          <p class="icev__note">链接只含密文，不含密码、密钥或明文。复制后在扩展设置页完成导入。</p>
         </div>
+      </div>
+
+      <div class="icev__manual">
+        <p class="icev__manual-baslik">手动导入 · 三步</p>
+        <ol class="icev__adimlar">
+          <li>
+            <span class="n">01</span>
+            <div><b>复制链接并打开扩展设置页</b><span>在扩展详情页点「扩展选项」，或右键工具栏图标选「选项」。</span></div>
+          </li>
+          <li>
+            <span class="n">02</span>
+            <div><b>找到「从链接导入」</b><span>在「导入」分组顶部，把链接粘贴进输入框。</span></div>
+          </li>
+          <li>
+            <span class="n">03</span>
+            <div><b>输入密码并确认</b><span>先预览账户，再选择合并或覆盖，最后确认写入。</span></div>
+          </li>
+        </ol>
       </div>
     </section>
   </main>

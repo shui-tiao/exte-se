@@ -43,6 +43,39 @@ function b64UrlDolgu(metin) {
   return kalan ? s + "=".repeat(4 - kalan) : s;
 }
 
+const b64UrlGecerli = (metin, min) =>
+  typeof metin === "string" && new RegExp(`^[A-Za-z0-9_-]{${min},}$`).test(metin);
+
+/**
+ * Yapıştırılan metni bağlantı kaydına çevirir. Tam URL, `#exte?…` veya
+ * `exte?…` biçimlerinin hepsi kabul edilir. Biçim bozuksa `iceParolaYanlis`
+ * fırlatır; sürüm yüksek olsa bile kayıt döner (diyalog engeli gösterir).
+ * → {v, i, s, d, surum, kaynak:"link"}
+ */
+export function baglantiAyikla(metin) {
+  const ham = String(metin ?? "").trim();
+  if (!ham) throw new Error(t("iceLinkBos"));
+
+  const kes = ham.indexOf(`#${BAGLANTI_ONEK}`);
+  const parca = kes >= 0 ? ham.slice(kes + 1) : ham.replace(/^#/, "");
+  if (!parca.startsWith(BAGLANTI_ONEK)) throw new Error(t("iceParolaYanlis"));
+
+  const p = new URLSearchParams(parca.slice(BAGLANTI_ONEK.length));
+  const v = p.get("v") || "";
+  const i = p.get("i") || "";
+  const s = p.get("s") || "";
+  const d = p.get("d") || "";
+  const gecerli =
+    /^\d{1,3}$/.test(v) &&
+    /^\d{5,7}$/.test(i) &&
+    Number(i) >= 100_000 &&
+    b64UrlGecerli(s, 20) &&
+    b64UrlGecerli(d, 24);
+  if (!gecerli) throw new Error(t("iceParolaYanlis"));
+
+  return { v, i, s, d, surum: v, kaynak: "link" };
+}
+
 /**
  * Bağlantı kaydı (`v`, `i`, `s`, `d`) + parola → çözülen yapılandırma.
  * Sürüm yüksekse şifre çözülmeden hata verir. Parola yanlışı ile bozuk
@@ -50,21 +83,21 @@ function b64UrlDolgu(metin) {
  * → {hesaplar, ayarlar?}
  */
 export async function baglantiCoz(kayit, parola) {
-  const surum = Number(kayit?.v);
+  const surum = Number(kayit?.v ?? kayit?.surum);
   if (!Number.isInteger(surum) || surum < 1) throw new Error(t("iceSurumGecersiz"));
   if (surum > BAGLANTI_SURUMU) throw new Error(t("iceSurumYuksek", surum, BAGLANTI_SURUMU));
 
-  const yineleme = Number(kayit?.i);
+  const yineleme = Number(kayit?.i ?? kayit?.yineleme);
   if (!Number.isInteger(yineleme) || yineleme < 100_000 || yineleme > 9_999_999) {
     throw new Error(t("iceParolaYanlis"));
   }
 
   let duz;
   try {
-    const tuz = b64Coz(b64UrlDolgu(kayit?.s));
+    const tuz = b64Coz(b64UrlDolgu(kayit?.s ?? kayit?.tuz));
     if (!tuz.length || tuz.length > 64) throw new Error("TUZ");
     const anahtar = await anahtarTurte(parola, tuz, yineleme);
-    duz = await coz(anahtar, b64UrlDolgu(kayit?.d));
+    duz = await coz(anahtar, b64UrlDolgu(kayit?.d ?? kayit?.veri));
   } catch {
     throw new Error(t("iceParolaYanlis"));
   }

@@ -142,9 +142,20 @@
           <h2 id="iceBaslik" data-i18n="iceAktar">Import</h2>
           <p class="group__desc" data-i18n-html="iceAktarIpucu"></p>
         </div>
-        <span class="group__badge">JSON / TXT</span>
+        <span class="group__badge">JSON / TXT / LINK</span>
       </header>
       <div class="group__body">
+        <div class="ice-link">
+          <div class="alan">
+            <label for="iceLinkMetin" data-i18n="iceLinkEtiket">Config link</label>
+            <input type="text" id="iceLinkMetin" autocomplete="off" spellcheck="false"
+                   placeholder="https://…/#exte?v=1&amp;i=310000&amp;s=…&amp;d=…">
+          </div>
+          <p class="ice-link__ipucu" data-i18n="iceLinkIpucu"></p>
+          <button type="button" id="iceLinkAc" class="birincil" data-i18n="iceLinkAc">Import from link</button>
+          <p id="iceLinkDurum" class="durum" role="status"></p>
+        </div>
+        <p class="ice-veya" data-i18n="iceVeyaDosya"></p>
         <div class="alan">
           <label for="iceParola" data-i18n="yedekParolasiIce">Backup password (for encrypted JSON)</label>
           <input type="password" id="iceParola" autocomplete="current-password">

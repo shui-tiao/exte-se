@@ -23,13 +23,18 @@
   const SAHNE = document.getElementById("sahne");
   const ICEV = document.getElementById("iceAktarma");
   const KART = document.getElementById("icevKart");
-  const BAR_YOK = document.getElementById("barYok");
   const BAR_BOZUK = document.getElementById("barBozuk");
   const SURUM = document.getElementById("icevSurum");
   const KAPAT = document.getElementById("icevKapat");
-  const ONAY = document.getElementById("icevOnay");
+  const KOPYALA = document.getElementById("icevKopyala");
   const BASLIK = document.title;
   if (!SAHNE || !ICEV) return;
+
+  // 暂时关闭官网 → 扩展的探测与自动传递：扩展 ID 尚未确定。
+  // arka.js 的 ping / exte-import 监听和 manifest 的 externally_connectable
+  // 先保留，等 ID 填好后把此开关改为 true 即可重新启用。
+  const UZANTI_AKTARIMI_ACIK = false;
+
 
   const pazar = [...document.querySelectorAll(".copy, .preview")];
   const b64Url = (s, min) => new RegExp(`^[A-Za-z0-9_-]{${min},}$`).test(s || "");
@@ -53,8 +58,9 @@
     return { ok, surum: v || "—", v, i, s, d };
   }
 
-  /** 通过 externally_connectable 探测扩展；ID 未填时按未安装处理。 */
+  /** 通过 externally_connectable 探测扩展（默认关闭，ID 确定后启用）。 */
   function uzantiVarMi() {
+    if (!UZANTI_AKTARIMI_ACIK) return Promise.resolve(false);
     return new Promise((resolve) => {
       const kimlik = globalThis.EXTE_SITE?.uzantiKimlik;
       if (!kimlik || !globalThis.chrome?.runtime?.sendMessage) return resolve(false);
@@ -75,18 +81,14 @@
     ICEV.hidden = false;
     KART.hidden = !veri.ok;
     BAR_BOZUK.hidden = veri.ok;
-    BAR_YOK.hidden = true;
     AKTARIM = veri;
     if (SURUM) SURUM.textContent = `v${veri.surum}`;
     document.title = "导入配置链接 — EXTE SE";
-    if (!veri.ok) return;
-    uzantiVarMi().then((varMi) => {
-      BAR_YOK.hidden = varMi;
-    });
   }
 
-  /** 把密文与公开 KDF 参数交给扩展；不传密码，也不传明文。 */
+  /** 把密文与公开 KDF 参数交给扩展（默认关闭，ID 确定后启用）。 */
   function iletiGonder(veri) {
+    if (!UZANTI_AKTARIMI_ACIK) return Promise.resolve(false);
     return new Promise((resolve) => {
       const kimlik = globalThis.EXTE_SITE?.uzantiKimlik;
       if (!kimlik || !globalThis.chrome?.runtime?.sendMessage) return resolve(false);
@@ -105,16 +107,33 @@
     });
   }
 
-  async function icevOnayla() {
+  /** 复制当前带 hash 的完整链接；不发送、不解除 hash。 */
+  async function icevKopyala() {
     if (!AKTARIM?.ok) return;
-    const gonderildi = await iletiGonder(AKTARIM);
-    if (!gonderildi) {
-      BAR_YOK.hidden = false;
-      bildir("请先安装扩展后再导入。");
-      return;
+    const metin = location.href;
+    try {
+      await navigator.clipboard.writeText(metin);
+    } catch {
+      const gecici = document.createElement("textarea");
+      gecici.value = metin;
+      gecici.setAttribute("readonly", "");
+      gecici.style.position = "fixed";
+      gecici.style.top = "-1000px";
+      document.body.append(gecici);
+      gecici.select();
+      let oldu = false;
+      try {
+        oldu = document.execCommand("copy");
+      } catch {
+        oldu = false;
+      }
+      gecici.remove();
+      if (!oldu) {
+        bildir("复制失败，请手动选中地址栏里的链接。");
+        return;
+      }
     }
-    bildir("已发送到扩展，请在设置页完成导入。");
-    kapat();
+    bildir("配置链接已复制。请到扩展设置页点「从链接导入」并粘贴。");
   }
 
   /** 清掉 hash（不新增历史记录），回到营销页。 */
@@ -139,7 +158,7 @@
   }
 
   KAPAT?.addEventListener("click", kapat);
-  ONAY?.addEventListener("click", icevOnayla);
+  KOPYALA?.addEventListener("click", icevKopyala);
   window.addEventListener("hashchange", bak);
   bak();
 })();

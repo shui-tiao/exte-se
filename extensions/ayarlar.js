@@ -5,7 +5,7 @@ import * as depo from "./src/depo.js";
 import { sifreliYedekUret, sifreliYedekCoz, txtUret, txtCoz, dosyaIndir, YEDEK_TIPI } from "./src/yedek.js";
 import { resimdenCoz } from "./src/qr.js";
 import { gocCoz } from "./src/goc.js";
-import { baglantiUret, baglantiCoz, BAGLANTI_SURUMU } from "./src/baglanti.js";
+import { baglantiUret, baglantiCoz, baglantiAyikla, BAGLANTI_SURUMU } from "./src/baglanti.js";
 import { $, toast, duyur, temayiUygula, t, diliBaslat, sayfayiCevir, panoyaKopyala } from "./src/ui.js";
 
 const durum = (secici, mesaj, tur = "") => {
@@ -280,12 +280,25 @@ function iceOnizlemeyiDoldur() {
 
 async function iceDiyalogAc(kayit) {
   iceSifirla();
-  iceKayit = kayit;
+  // Site oturum kaydı (surum/yineleme/tuz/veri) ile yapıştırılan bağlantı
+  // kaydı (v/i/s/d) aynı şemaya indirgenir.
+  iceKayit = {
+    v: String(kayit.v ?? kayit.surum ?? ""),
+    i: String(kayit.i ?? kayit.yineleme ?? ""),
+    s: String(kayit.s ?? kayit.tuz ?? ""),
+    d: String(kayit.d ?? kayit.veri ?? ""),
+    surum: String(kayit.v ?? kayit.surum ?? ""),
+    kaynak: kayit.kaynak,
+  };
   $("#iceDiyalogKaynak").textContent =
-    kayit.kaynak === "site" ? t("iceKaynakSite") : t("baglantiBaslik");
-  $("#iceDiyalogSurum").textContent = `v${kayit.surum ?? "—"}`;
+    iceKayit.kaynak === "site"
+      ? t("iceKaynakSite")
+      : iceKayit.kaynak === "link"
+        ? t("iceKaynakLink")
+        : t("baglantiBaslik");
+  $("#iceDiyalogSurum").textContent = `v${iceKayit.surum || "—"}`;
 
-  const surum = Number(kayit.surum);
+  const surum = Number(iceKayit.surum);
   if (!Number.isInteger(surum) || surum < 1) {
     iceDurum(t("iceSurumGecersiz"));
     $("#iceDiyalogParola").disabled = true;
@@ -335,6 +348,23 @@ iceDiyalog.addEventListener("close", () => {
 
 $("#iceDiyalogIptal").addEventListener("click", () => iceDiyalog.close());
 $("#iceDiyalogGeri").addEventListener("click", iceParolaAdiminaDon);
+
+// 手动流程：粘贴整条链接（或 #exte?… 片段）再走同一套解密 / 预览 / 回滚。
+$("#iceLinkAc").addEventListener("click", async () => {
+  const girdi = $("#iceLinkMetin");
+  const mesaj = $("#iceLinkDurum");
+  mesaj.textContent = "";
+  mesaj.className = "durum";
+  try {
+    const kayit = baglantiAyikla(girdi.value);
+    girdi.value = "";
+    await iceDiyalogAc(kayit);
+  } catch (err) {
+    mesaj.textContent = err.message;
+    mesaj.className = "durum hata-metin";
+    duyur(err.message);
+  }
+});
 
 for (const r of iceModlar()) {
   r.addEventListener("change", () => {

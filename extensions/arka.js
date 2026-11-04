@@ -1,6 +1,9 @@
-// 官网 → 扩展通道。externally_connectable yalnızca官网占位域名na izin verir.
-// `exte-import` yalnızca şifreli kaydı chrome.storage.session'a bırakır; parola
-// ve düz metin buraya hiç gelmez. Ayarlar sayfası açılıp kullanıcı onaylayınca yazar.
+// 官网 → 扩展通道。externally_connectable 只允许官网域名。
+//
+// 暂时关闭：扩展 ID 尚未确定，官网暂不探测、也不自动传递。
+// ping / exte-import 监听与 manifest 的 externally_connectable 先保留，
+// 等 ID 填好后打开 site.js 的 UZANTI_AKTARIMI_ACIK 即可启用。
+// `exte-import` 只把密文写入 chrome.storage.session；密码和明文不会到这里。
 "use strict";
 
 const BEKLEYEN_ANAHTAR = "bekleyenIceAktarim";
