@@ -1,0 +1,10 @@
+{
+  "ad": {
+    "message": "EXTE SE — 暗号化バックアップ付き 2 段階認証アプリ",
+    "description": "Extension name shown in Chrome and the Web Store"
+  },
+  "aciklama": {
+    "message": "Chrome で 2 段階認証コードを確認。Google Authenticator のアカウントをインポートし、QR コードをスキャンし、暗号化バックアップを保管できます。",
+    "description": "Short description shown in the Web Store"
+  }
+}

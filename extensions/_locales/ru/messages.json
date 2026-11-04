@@ -1,0 +1,10 @@
+{
+  "ad": {
+    "message": "EXTE SE — 2FA-аутентификатор с зашифрованной резервной копией",
+    "description": "Extension name shown in Chrome and the Web Store"
+  },
+  "aciklama": {
+    "message": "Получайте коды двухфакторной аутентификации прямо в Chrome. Импортируйте аккаунты Google Authenticator, сканируйте QR-коды и храните зашифрованную резервную копию.",
+    "description": "Short description shown in the Web Store"
+  }
+}

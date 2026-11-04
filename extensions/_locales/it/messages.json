@@ -1,0 +1,10 @@
+{
+  "ad": {
+    "message": "EXTE SE — Autenticatore 2FA con backup cifrato",
+    "description": "Extension name shown in Chrome and the Web Store"
+  },
+  "aciklama": {
+    "message": "Ottieni i tuoi codici di verifica in due passaggi direttamente in Chrome. Importa gli account di Google Authenticator, scansiona i QR code e conserva un backup cifrato.",
+    "description": "Short description shown in the Web Store"
+  }
+}

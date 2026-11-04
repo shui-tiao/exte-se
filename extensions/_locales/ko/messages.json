@@ -1,0 +1,10 @@
+{
+  "ad": {
+    "message": "EXTE SE — 암호화 백업을 지원하는 2단계 인증 앱",
+    "description": "Extension name shown in Chrome and the Web Store"
+  },
+  "aciklama": {
+    "message": "Chrome에서 2단계 인증 코드를 바로 확인하세요. Google Authenticator 계정을 가져오고, QR 코드를 스캔하고, 암호화된 백업을 보관할 수 있습니다.",
+    "description": "Short description shown in the Web Store"
+  }
+}
