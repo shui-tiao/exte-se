@@ -15,11 +15,19 @@
 import { anahtarTurte, anahtarDisaAktar, anahtarIceAktar, sifrele, coz, rastgele, b64Kodla, b64Coz, PBKDF2_YINELEME } from "./kripto.js";
 
 import { t } from "./metinler.js";
+import { base32Coz } from "./otp.js";
 
 const SURUM = 1;
 const OTURUM_ANAHTAR = "oturumAnahtari";
 const OTURUM_DAMGA = "sonKullanim";
 export const VARSAYILAN_AYARLAR = { tema: "auto", otoKilitDk: 15, dil: "auto" };
+
+// Parola doğrulama kilidi: 5 hatalı denemeden sonra 60 sn bekleme.
+// yerel.depo'da tutulur (chrome.storage.local) → sayfa kapatılsa / tarayıcı
+// yeniden açılsa da sayaç ve bitiş zamanı korunur.
+const DENEME_ANAHTAR = "kilitDeneme";
+export const DENEME_SINIRI = 5;
+export const DENEME_COOLDOWN_MS = 60_000;
 
 const yerel = {
   oku: (anahtarlar) => chrome.storage.local.get(anahtarlar),
@@ -68,12 +76,68 @@ async function oturumAnahtari() {
   return anahtarIceAktar(veri[OTURUM_ANAHTAR]);
 }
 
+/* ---------- parola denemesi sayacı ---------- */
+
+/**
+ * Kayıtlı deneme durumunu okur. Bitiş zamanı geçmişse kaydı temizler.
+ * → {hatali, bitis, kalanSn, kilitli}
+ */
+export async function denemeDurumu() {
+  const { [DENEME_ANAHTAR]: kayit } = await yerel.oku(DENEME_ANAHTAR);
+  const hatali = Math.max(0, Number(kayit?.hatali) || 0);
+  const bitis = Number(kayit?.bitis) || 0;
+  if (bitis && bitis <= Date.now()) {
+    await yerel.sil(DENEME_ANAHTAR);
+    return { hatali: 0, bitis: 0, kalanSn: 0, kilitli: false };
+  }
+  const kalanSn = bitis ? Math.ceil((bitis - Date.now()) / 1000) : 0;
+  return { hatali, bitis, kalanSn, kilitli: kalanSn > 0 };
+}
+
+/** Soğuma süresi dolmuşsa sayacı sıfırlar (başarılı doğrulamada da çağrılır). */
+async function denemeSifirla() {
+  await yerel.sil(DENEME_ANAHTAR);
+}
+
+/** Hatalı denemeyi kaydeder; sınıra ulaşınca soğuma başlatır. → güncel durum */
+async function denemeHatasiKaydet() {
+  const { [DENEME_ANAHTAR]: kayit } = await yerel.oku(DENEME_ANAHTAR);
+  const hatali = (Number(kayit?.hatali) || 0) + 1;
+  if (hatali >= DENEME_SINIRI) {
+    const bitis = Date.now() + DENEME_COOLDOWN_MS;
+    await yerel.yaz({ [DENEME_ANAHTAR]: { hatali: DENEME_SINIRI, bitis } });
+    return { hatali: DENEME_SINIRI, bitis, kalanSn: Math.ceil(DENEME_COOLDOWN_MS / 1000), kilitli: true };
+  }
+  await yerel.yaz({ [DENEME_ANAHTAR]: { hatali, bitis: 0 } });
+  return { hatali, bitis: 0, kalanSn: 0, kilitli: false };
+}
+
+/**
+ * Parolayı doğrular. Soğuma sürüyorsa doğrulamayı reddeder; yanlış parolada
+ * sayacı artırır, doğru parolada sayacı temizler.
+ */
+async function parolayiDogrula(parola, kilit) {
+  const bekleme = await denemeDurumu();
+  if (bekleme.kilitli) throw new Error(t("denemeBekle", bekleme.kalanSn));
+
+  let anahtar;
+  try {
+    anahtar = await anahtarTurte(parola, b64Coz(kilit.tuz), kilit.yineleme || PBKDF2_YINELEME);
+    await coz(anahtar, kilit.kontrol); // parola yanlışsa burada patlar
+  } catch (err) {
+    const son = await denemeHatasiKaydet();
+    if (son.kilitli) throw new Error(t("denemeBekle", son.kalanSn));
+    throw err;
+  }
+  await denemeSifirla();
+  return anahtar;
+}
+
 /** Parolayı doğrular ve oturum anahtarını açar. Yanlışsa hata fırlatır. */
 export async function kilidiAc(parola) {
   const kilit = await kilitDurumu();
   if (!kilit.acik) return;
-  const anahtar = await anahtarTurte(parola, b64Coz(kilit.tuz), kilit.yineleme || PBKDF2_YINELEME);
-  await coz(anahtar, kilit.kontrol); // parola yanlışsa burada patlar
+  const anahtar = await parolayiDogrula(parola, kilit);
   await chrome.storage.session.set({
     [OTURUM_ANAHTAR]: await anahtarDisaAktar(anahtar),
     [OTURUM_DAMGA]: Date.now(),
@@ -98,6 +162,7 @@ export async function kilitKur(parola) {
     kasa: await sifrele(anahtar, JSON.stringify(hesaplar)),
   });
   await yerel.sil("hesaplar");
+  await denemeSifirla();
   await chrome.storage.session.set({
     [OTURUM_ANAHTAR]: await anahtarDisaAktar(anahtar),
     [OTURUM_DAMGA]: Date.now(),
@@ -108,8 +173,7 @@ export async function kilitKur(parola) {
 export async function kilidiKaldir(parola) {
   const kilit = await kilitDurumu();
   if (!kilit.acik) return;
-  const anahtar = await anahtarTurte(parola, b64Coz(kilit.tuz), kilit.yineleme || PBKDF2_YINELEME);
-  await coz(anahtar, kilit.kontrol);
+  const anahtar = await parolayiDogrula(parola, kilit);
   const { kasa } = await yerel.oku("kasa");
   const hesaplar = kasa ? JSON.parse(await coz(anahtar, kasa)) : [];
   await yerel.yaz({ surum: SURUM, kilit: { acik: false }, hesaplar });
@@ -196,4 +260,124 @@ export async function hesaplariBirlestir(gelen) {
   }
   if (eklenecek.length) await hesaplariYaz([...mevcut, ...eklenecek]);
   return { eklenen: eklenecek.length, atlanan };
+}
+
+/* ---------- yapılandırma bağlantısı: bekleyen aktarım ---------- */
+
+/** Site → eklenti aktarımı chrome.storage.session'da bu anahtarla bekler. */
+export const BEKLEYEN_ANAHTAR = "bekleyenIceAktarim";
+
+/** Bekleyen (yalnızca şifreli) aktarım kaydını okur; yoksa null. */
+export async function bekleyenIceAktarimOku() {
+  const { [BEKLEYEN_ANAHTAR]: kayit } = await chrome.storage.session.get(BEKLEYEN_ANAHTAR);
+  if (!kayit || typeof kayit !== "object") return null;
+  return kayit;
+}
+
+/** Aktarım başarılı, iptal edildi ya da penceresi kapandıysa kaydı siler. */
+export async function bekleyenIceAktarimSil() {
+  await chrome.storage.session.remove(BEKLEYEN_ANAHTAR);
+}
+
+/**
+ * Aynı ad kuralı: hizmet + hesap adı; NFC normalize, baş/son boşluk kırpılır,
+ * büyük/küçük harf yok sayılır. Gizli anahtar, tür ve algoritma dikkate alınmaz.
+ */
+export function ayniAdMi(a, b) {
+  const n = (s) => String(s || "").normalize("NFC").trim().toLowerCase();
+  return n(a.issuer) === n(b.issuer) && n(a.ad) === n(b.ad);
+}
+
+const ALGOLAR = new Set(["SHA1", "SHA256", "SHA512"]);
+const TIPLER = new Set(["totp", "hotp"]);
+
+function sayi(deger, varsayilan) {
+  const n = Number(deger);
+  return Number.isFinite(n) ? n : varsayilan;
+}
+
+/** Kaydı beklenen şemaya indirger; geçersizse null. Yeni kimlik ve sayaç korunur. */
+function hesapTemizle(h) {
+  if (!h || typeof h !== "object") return null;
+  const ad = String(h.ad ?? "").trim();
+  const issuer = String(h.issuer ?? "").trim();
+  const gizli = String(h.gizli ?? "").replace(/\s/g, "").toUpperCase();
+  if (!ad || !gizli) return null;
+  try {
+    base32Coz(gizli);
+  } catch {
+    return null;
+  }
+  const tip = TIPLER.has(h.tip) ? h.tip : "totp";
+  const algoHam = String(h.algo ?? "").toUpperCase();
+  const algo = ALGOLAR.has(algoHam) ? algoHam : "SHA1";
+  const hane = Math.trunc(sayi(h.hane, 6));
+  if (hane < 6 || hane > 10) return null;
+  const periyot = sayi(h.periyot, 30);
+  if (!(periyot > 0)) return null;
+  const sayac = Math.max(0, Math.trunc(sayi(h.sayac, 0)));
+  return { id: yeniKimlik(), ad, issuer, gizli, tip, algo, hane, periyot, sayac };
+}
+
+/** Yazma başarısız olduğunda depoyu işlem öncesi hâline döndürür. */
+async function yazmayiGeriAl(anlik) {
+  const geri = {};
+  const silinecek = [];
+  for (const [k, v] of Object.entries(anlik)) {
+    if (v === undefined) silinecek.push(k);
+    else geri[k] = v;
+  }
+  if (Object.keys(geri).length) await yerel.yaz(geri);
+  if (silinecek.length) await yerel.sil(silinecek);
+}
+
+/**
+ * Yapılandırma bağlantısındaki hesapları yazar.
+ * mod: "birlestir" (mevcutlar korunur, aynı adlılar atlanır) | "uzerineYaz" (önce temizlenir).
+ * Yazma tek bir storage.set çağrısıdır; herhangi bir adım hata verirse depo
+ * işlem öncesi anlık görüntüsüne geri döner, yarım hesap listesi kalmaz.
+ * → {yazilan, atlanan, toplam}
+ */
+export async function iceAktarimYaz(gelen, mod = "birlestir") {
+  if (mod !== "birlestir" && mod !== "uzerineYaz") throw new Error("GECERSIZ_MOD");
+  if (!Array.isArray(gelen)) throw new Error(t("iceBozukVeri"));
+
+  const temiz = [];
+  for (const h of gelen) {
+    const kayit = hesapTemizle(h);
+    if (kayit) temiz.push(kayit);
+  }
+  if (!temiz.length) throw new Error(t("iceBos"));
+
+  let mevcut;
+  try {
+    mevcut = await hesaplariOku();
+  } catch (err) {
+    if (err?.message === "KILITLI") throw new Error(t("iceKilitli"));
+    throw err;
+  }
+
+  const hedef = [];
+  let atlanan = 0;
+  if (mod === "uzerineYaz") {
+    hedef.push(...temiz);
+  } else {
+    hedef.push(...mevcut);
+    for (const h of temiz) {
+      if (hedef.some((m) => ayniAdMi(m, h))) {
+        atlanan++;
+        continue;
+      }
+      hedef.push(h);
+    }
+  }
+
+  const anlik = await yerel.oku(["hesaplar", "kasa", "surum"]);
+  try {
+    await hesaplariYaz(hedef);
+  } catch {
+    await yazmayiGeriAl(anlik);
+    throw new Error(t("iceHataGeriAlindi"));
+  }
+  return { yazilan: temiz.length - atlanan, atlanan, toplam: hedef.length };
 }

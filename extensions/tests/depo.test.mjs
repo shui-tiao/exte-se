@@ -131,3 +131,59 @@ test("kısa parola reddediliyor", async () => {
   await sifirla();
   await assert.rejects(() => depo.kilitKur("kisa"), /at least 6/);
 });
+
+test("配置链接合并：同名账户（服务+名称，忽略大小写/空白）跳过", async () => {
+  await sifirla();
+  await depo.hesapEkle({ ad: "muslu", issuer: "GitHub", gizli: GIZLI });
+
+  const sonuc = await depo.iceAktarimYaz(
+    [
+      { ad: "  MUSLU ", issuer: " github ", gizli: "JBSWY3DPEHPK3PXP" }, // aynı ad → atlanır
+      { ad: "second", issuer: "GitLab", gizli: "JBSWY3DPEHPK3PXP" },
+      { ad: "second", issuer: "GitLab", gizli: "GEZDGNBVGY3TQOJQ" }, // link içi tekrar → atlanır
+    ],
+    "birlestir",
+  );
+  assert.deepEqual(sonuc, { yazilan: 1, atlanan: 2, toplam: 2 });
+  assert.equal((await depo.hesaplariOku()).length, 2);
+});
+
+test("配置链接覆盖：先清空现有账户再写入", async () => {
+  await sifirla();
+  await depo.hesapEkle({ ad: "muslu", issuer: "GitHub", gizli: GIZLI });
+
+  const sonuc = await depo.iceAktarimYaz(
+    [{ ad: "yeni", issuer: "GitLab", gizli: "JBSWY3DPEHPK3PXP", hane: 8, periyot: 60 }],
+    "uzerineYaz",
+  );
+  assert.deepEqual(sonuc, { yazilan: 1, atlanan: 0, toplam: 1 });
+  const kalan = await depo.hesaplariOku();
+  assert.equal(kalan.length, 1);
+  assert.equal(kalan[0].ad, "yeni");
+  assert.equal(kalan[0].hane, 8);
+});
+
+test("写入中途失败时回滚到导入前的账户", async () => {
+  await sifirla();
+  await depo.hesapEkle({ ad: "muslu", issuer: "GitHub", gizli: GIZLI });
+  const once = await depo.hesaplariOku();
+
+  const gercekSet = chrome.storage.local.set;
+  let ilkCagri = true;
+  chrome.storage.local.set = async (nesne) => {
+    if (ilkCagri) {
+      ilkCagri = false;
+      throw new Error("storage failure");
+    }
+    return gercekSet.call(chrome.storage.local, nesne);
+  };
+  try {
+    await assert.rejects(
+      () => depo.iceAktarimYaz([{ ad: "yeni", issuer: "GitLab", gizli: "JBSWY3DPEHPK3PXP" }], "uzerineYaz"),
+      /restored|geri yüklendi|已恢复/,
+    );
+  } finally {
+    chrome.storage.local.set = gercekSet;
+  }
+  assert.deepEqual(await depo.hesaplariOku(), once, "yarım liste kalmamalı");
+});

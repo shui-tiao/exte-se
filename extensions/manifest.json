@@ -10,6 +10,14 @@
     "activeTab",
     "clipboardWrite"
   ],
+  "background": {
+    "service_worker": "arka.js"
+  },
+  "externally_connectable": {
+    "matches": [
+      "https://shui-tiao.github.io/exte-se/*"
+    ]
+  },
   "action": {
     "default_title": "__MSG_ad__",
     "default_popup": "popup.html",

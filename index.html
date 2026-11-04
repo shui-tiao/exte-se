@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EXTE SE — 两步验证，就在工具栏</title>
+<style>
+  :root{
+    --bg:#f4f1e9; --yuzey:#fbfaf6; --kenar:#d8d3c6; --kenar-koyu:#b9b2a2;
+    --metin:#17150f; --mute:#6f685b; --kod:#11100c;
+    --marka:#e8451c; --marka-hover:#cf3a10; --marka-ink:#b8330d;
+    --marka-soft:rgba(232,69,28,.06);
+    --ok:#1f6b49;
+    --sans:"Archivo","Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+    --mono:"IBM Plex Mono","JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    color-scheme:light;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;background:var(--bg);color:var(--metin);
+    font-family:var(--sans);font-size:15px;line-height:1.6;
+    -webkit-font-smoothing:antialiased;overflow:hidden;
+    background-image:linear-gradient(to bottom,rgba(23,21,15,.028) 1px,transparent 1px);
+    background-size:100% 88px;
+  }
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;cursor:pointer}
+  :focus-visible{outline:2px solid var(--marka);outline-offset:3px;border-radius:1px}
+
+  .shell{
+    height:100svh;max-width:1180px;margin:0 auto;padding:0 28px;
+    display:grid;grid-template-rows:64px minmax(0,1fr) 46px;
+  }
+
+  /* ---------- header ---------- */
+  .top{display:flex;align-items:center;gap:13px;border-bottom:2px solid var(--metin)}
+  .mark{width:28px;height:28px;flex:none;background:var(--marka);color:#fff;display:grid;place-items:center;border-radius:1px}
+  .mark svg{width:16px;height:16px}
+  .brand h1{margin:0;font-size:15px;font-weight:800;letter-spacing:.08em;line-height:1.15;white-space:nowrap}
+  .brand small{display:block;font-family:var(--mono);font-size:7px;letter-spacing:.14em;color:var(--mute);margin-top:3px;text-transform:uppercase;white-space:nowrap}
+  .status{margin-left:auto;display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);white-space:nowrap}
+  .status::before{content:"";width:5px;height:5px;background:var(--ok);flex:none}
+  .status .sep{color:var(--kenar-koyu)}
+  .status b{color:var(--marka-ink);font-weight:500}
+
+  /* ---------- single screen ---------- */
+  .stage{
+    display:grid;grid-template-columns:minmax(0,1.18fr) minmax(320px,.82fr);
+    gap:56px;align-items:center;min-height:0;
+  }
+  .copy{padding:26px 0}
+  .kicker{display:flex;align-items:center;gap:10px;margin:0 0 20px;font-family:var(--mono);font-size:8.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--marka-ink)}
+  .kicker i{width:24px;height:2px;background:var(--marka);display:block;font-style:normal}
+  h1{margin:0 0 20px;font-size:clamp(42px,5.5vw,72px);line-height:1.02;letter-spacing:-.045em;font-weight:800}
+  h1 em{font-style:normal;color:var(--marka)}
+  .lede{margin:0 0 28px;max-width:31em;font-size:15px;line-height:1.75;color:var(--mute)}
+  .lede b{color:var(--metin);font-weight:700}
+
+  .cta-row{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:11px}
+  .cta{display:inline-flex;align-items:center;gap:10px;height:50px;padding:0 22px;border:1px solid var(--marka);border-radius:2px;
+    background:var(--marka);color:#fff;font-size:13px;font-weight:700;letter-spacing:.03em;transition:background .15s,border-color .15s}
+  .cta:hover{background:var(--marka-hover);border-color:var(--marka-hover)}
+  .cta .arw{font-family:var(--mono);font-size:12px;font-weight:400}
+  .placeholder{font-family:var(--mono);font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);border:1px dashed var(--kenar-koyu);padding:4px 7px;white-space:nowrap}
+  .placeholder b{color:var(--marka-ink);font-weight:500}
+  .note{margin:0;font-family:var(--mono);font-size:8px;letter-spacing:.06em;color:var(--mute);text-transform:uppercase}
+
+  .points{list-style:none;margin:28px 0 0;padding:0;border-top:1px solid var(--kenar)}
+  .points li{display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--kenar);font-size:12px;color:var(--mute)}
+  .points b{font-family:var(--mono);font-size:8px;font-weight:500;letter-spacing:.05em;color:var(--marka-ink)}
+  .points span{color:var(--metin)}
+  .points span i{font-style:normal;color:var(--mute)}
+
+  /* ---------- one interface hint ---------- */
+  .preview{justify-self:end;width:100%;max-width:344px}
+  .preview__label{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;font-family:var(--mono);font-size:7px;letter-spacing:.11em;text-transform:uppercase;color:var(--mute)}
+  .preview__label b{color:var(--marka-ink);font-weight:500}
+  .popup{border:1px solid var(--kenar-koyu);background:var(--yuzey);position:relative}
+  .popup::before{content:"";position:absolute;left:-11px;top:34px;width:5px;height:5px;background:var(--marka)}
+  .p-head{display:flex;align-items:center;gap:8px;padding:12px 14px 7px}
+  .p-brand{font-size:12.5px;font-weight:800;letter-spacing:.1em}
+  .p-brand small{font-size:7.5px;letter-spacing:.14em;color:var(--marka);margin-left:3px}
+  .p-tag{margin-left:auto;font-family:var(--mono);font-size:6.5px;letter-spacing:.1em;color:var(--mute);white-space:nowrap}
+  .p-search{margin:0 14px;padding:5px 0 7px;border-bottom:1px solid var(--kenar);display:flex;align-items:center;gap:6px;font-size:9.5px;color:var(--mute)}
+  .p-search svg{width:9px;height:9px;flex:none}
+  .p-row{position:relative;padding:9px 14px 12px;border-bottom:1px solid var(--kenar)}
+  .p-row span{display:block;font-size:7.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:1px}
+  .p-row strong{display:block;font-family:var(--mono);font-size:26px;line-height:1.15;font-weight:600;letter-spacing:.06em;color:var(--kod)}
+  .p-bar{position:absolute;left:14px;right:14px;bottom:4px;height:2px;background:var(--kenar);overflow:hidden}
+  .p-bar i{display:block;height:100%;width:100%;background:var(--ok);transform-origin:left center;animation:shrink 30s linear infinite}
+  @keyframes shrink{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+  .p-foot{padding:8px 12px 9px;border-top:1px solid var(--kenar);background:var(--bg)}
+  .p-add{width:100%;height:30px;border:0;border-radius:1px;background:var(--marka);color:#fff;display:flex;align-items:center;justify-content:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:.05em}
+  .p-add svg{width:10px;height:10px}
+  .preview__caption{margin:9px 0 0;font-family:var(--mono);font-size:7px;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);text-align:right}
+
+  /* ---------- footer ---------- */
+  .foot{display:flex;align-items:center;gap:12px;border-top:1px solid var(--kenar);font-family:var(--mono);font-size:7.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--mute);white-space:nowrap}
+  .foot .right{margin-left:auto;text-align:right;overflow:hidden;text-overflow:ellipsis}
+  .foot .dot{color:var(--kenar-koyu)}
+
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(6px);background:var(--metin);color:var(--bg);
+    font-family:var(--mono);font-size:10px;letter-spacing:.03em;padding:8px 14px;z-index:50;opacity:0;pointer-events:none;transition:.18s}
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  [hidden]{display:none!important}
+
+  /* ---------- config link import view ---------- */
+  .stage[data-view="icev"]{grid-template-columns:minmax(0,1fr);align-items:start}
+  .icev{width:100%;max-width:660px;justify-self:center;align-self:start;max-height:100%;overflow-y:auto;padding:16px 2px 10px;scrollbar-width:thin}
+  .icev .kicker{margin-bottom:12px}
+  .icev__title{margin:0 0 12px;font-size:clamp(28px,4vw,40px);line-height:1.08;letter-spacing:-.03em}
+  .icev .lede{margin:0 0 18px;max-width:46em}
+  .bar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 16px;align-items:center;
+    margin:0 0 12px;padding:10px 13px;border:1px solid var(--kenar-koyu);border-left-width:3px;
+    font-size:12.5px;line-height:1.55}
+  .bar b{font-size:12.5px;font-weight:700}
+  .bar span{grid-column:1;color:var(--mute)}
+  .bar--warn{border-left-color:#c99a2e;background:#fbf3d9}
+  .bar--bad{border-left-color:#c93a12;background:#fbe9e4}
+  .bar__btn{grid-row:1 / span 2;grid-column:2;height:32px;padding:0 12px;border:1px solid var(--kenar-koyu);
+    border-radius:1px;background:var(--yuzey);color:var(--metin);font-size:11.5px;font-weight:700;white-space:nowrap}
+  .bar__btn:hover{border-color:var(--metin)}
+  .card{border:1px solid var(--kenar-koyu);background:var(--yuzey)}
+  .card__head{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--kenar)}
+  .card__badge{font-family:var(--mono);font-size:8px;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--mute);border:1px solid var(--kenar);padding:3px 7px}
+  .card__head strong{font-size:13px;font-weight:700}
+  .meta{margin:0}
+  .meta>div{display:grid;grid-template-columns:104px minmax(0,1fr);gap:14px;padding:9px 16px;border-bottom:1px solid var(--kenar)}
+  .meta dt{font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);padding-top:2px}
+  .meta dd{margin:0;font-size:12.5px;line-height:1.55}
+  .card__foot{padding:13px 16px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+  .cta--sm{height:42px;padding:0 18px;font-size:12.5px}
+  .ghost{height:42px;padding:0 16px;border:1px solid var(--kenar-koyu);border-radius:1px;
+    background:transparent;color:var(--mute);font-size:12px;font-weight:600}
+  .ghost:hover{color:var(--metin);border-color:var(--metin)}
+  .icev__note{flex-basis:100%;margin:2px 0 0;font-family:var(--mono);font-size:8px;letter-spacing:.05em;
+    text-transform:uppercase;color:var(--mute)}
+
+  @media (max-width:900px){
+    .shell{grid-template-rows:60px minmax(0,1fr) 44px;padding:0 20px}
+    .stage{grid-template-columns:1fr;gap:0}
+    .preview{display:none}
+    .copy{padding:0}
+    .points{margin-top:22px}
+  }
+  @media (max-width:560px){
+    h1{font-size:clamp(36px,10vw,46px)}
+    .lede{font-size:13.5px;margin-bottom:22px}
+    .cta{height:46px;padding:0 18px;font-size:12.5px}
+    .points li{font-size:11px;padding:7px 0}
+    .status .sep,.status .storetext{display:none}
+    .foot .right{display:none}
+  }
+  @media (max-height:720px){
+    h1{font-size:clamp(36px,5vw,58px);margin-bottom:14px}
+    .lede{margin-bottom:20px;line-height:1.65}
+    .points{margin-top:18px}
+    .points li{padding:6px 0}
+    .copy{padding:0}
+  }
+  @media (max-height:600px){
+    .points{display:none}
+    .note{display:none}
+    .stage{grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr)}
+    .preview{display:block;max-width:300px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <header class="top">
+    <div class="mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6.5V12c0 4.5 3.5 7.5 8 8 4.5-.5 8-3.5 8-8V6.5L12 2z"/><path d="m9 12 2.2 2.2L15 10.4"/></svg>
+    </div>
+    <div class="brand">
+      <h1>EXTE SE</h1>
+      <small>两步验证器 · CHROME</small>
+    </div>
+    <div class="status">
+      <span>LOCAL · 0 NETWORK</span>
+      <span class="sep">/</span>
+      <span class="storetext">STORE — <b>待填</b></span>
+    </div>
+  </header>
+
+  <main class="stage" id="sahne">
+    <section class="copy" aria-labelledby="headline">
+      <p class="kicker"><i></i>CHROME EXTENSION · MANIFEST V3</p>
+      <h1 id="headline">两步验证，<br>就在<em>工具栏</em>。</h1>
+      <p class="lede">EXTE SE 把 TOTP 与 HOTP 验证码放进 Chrome：点图标看码，点验证码即复制。<b>没有账号，没有服务器，也没有网络权限。</b></p>
+
+      <div class="cta-row">
+        <button class="cta" type="button" data-todo="Releases 下载链接待填。商店尚未上架，安装方式为开发者模式手动加载。">
+          从 Releases 下载 <span class="arw">↓</span>
+        </button>
+        <span class="placeholder">LINK — <b>待填</b></span>
+      </div>
+      <p class="note">Chrome 116+ · 开发者模式加载 · 商店链接待填</p>
+
+      <ul class="points">
+        <li><b>01</b><span>TOTP / HOTP <i>·</i> SHA-1 / 256 / 512 <i>·</i> 6–8 位 <i>·</i> 30 / 60 秒</span></li>
+        <li><b>02</b><span>四种添加 <i>·</i> 屏幕扫码 / 图片 / otpauth 链接 / 手动</span></li>
+        <li><b>03</b><span>密码锁与加密备份 <i>·</i> AES-256-GCM <i>·</i> 数据只在本机</span></li>
+      </ul>
+    </section>
+
+    <aside class="preview" aria-hidden="true">
+      <div class="preview__label"><span>界面示意 / 380PX</span><b>● 点验证码即复制</b></div>
+      <div class="popup">
+        <div class="p-head">
+          <span class="p-brand">EXTE<small>SE</small></span>
+          <span class="p-tag">LOCAL · 0 NETWORK</span>
+        </div>
+        <div class="p-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          搜索…
+        </div>
+        <div class="p-row">
+          <span>GitHub</span>
+          <strong>482 196</strong>
+          <div class="p-bar"><i></i></div>
+        </div>
+        <div class="p-row">
+          <span>Google</span>
+          <strong>915 240</strong>
+          <div class="p-bar"><i style="animation-delay:-11s"></i></div>
+        </div>
+        <div class="p-foot">
+          <span class="p-add">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+            添加账户
+          </span>
+        </div>
+      </div>
+      <p class="preview__caption">演示数据 · 非真实验证码</p>
+    </aside>
+
+    <!-- 仅在 URL hash 命中配置链接时显示；正常访问不出现。 -->
+    <section class="icev" id="iceAktarma" aria-labelledby="icevBaslik" hidden>
+      <p class="kicker"><i></i>CONFIG LINK · AES-256-GCM</p>
+      <h1 class="icev__title" id="icevBaslik">导入配置链接</h1>
+      <p class="lede">这条链接由 EXTE SE 扩展生成，里面是加密后的账户与设置。本页只做识别与确认：不解密、不写入、不发送任何内容。</p>
+
+      <div class="bar bar--warn" id="barYok" role="status" hidden>
+        <b>未检测到 EXTE SE 扩展</b>
+        <span>安装后刷新此页，再把链接打开一次。</span>
+        <button type="button" class="bar__btn" data-todo="安装入口待填：商店尚未上架，暂用开发者模式加载。">安装扩展</button>
+      </div>
+
+      <div class="bar bar--bad" id="barBozuk" role="alert" hidden>
+        <b>链接不完整或已损坏</b>
+        <span>请让导出者重新生成，并整段复制。被聊天工具截断的链接会失效。</span>
+      </div>
+
+      <div class="card" id="icevKart">
+        <div class="card__head">
+          <span class="card__badge">ENCRYPTED CONFIG</span>
+          <strong>待导入的配置</strong>
+        </div>
+        <dl class="meta">
+          <div><dt>来源</dt><dd>EXTE SE 扩展 · 导出配置链接</dd></div>
+          <div><dt>内容</dt><dd>账户与密钥、偏好设置（主题 / 语言 / 自动锁定）</dd></div>
+          <div><dt>加密</dt><dd>AES-256-GCM · PBKDF2-SHA-256 · 310,000 次</dd></div>
+          <div><dt>版本</dt><dd id="icevSurum">v1</dd></div>
+          <div><dt>密码</dt><dd>导入时需要导出时设置的密码；链接内不含密码</dd></div>
+        </dl>
+        <div class="card__foot">
+          <button type="button" class="cta cta--sm" id="icevOnay">
+            导入到扩展 <span class="arw">→</span>
+          </button>
+          <button type="button" class="ghost" id="icevKapat">取消并关闭</button>
+          <p class="icev__note">只导入你本人生成的链接。确认后密文会发送到已安装的扩展，在设置页输入密码并选择覆盖或合并。</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>EXTE SE · MIT</span>
+    <span class="dot">/</span>
+    <span>基于 Muslu Yüksektepe 的 exte 项目</span>
+    <span class="right">权限仅 storage / activeTab / clipboardWrite · 无 host_permissions</span>
+  </footer>
+
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="extensions/src/site.js"></script>
+<script src="site.js"></script>
+</body>
+</html>
