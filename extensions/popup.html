@@ -8,20 +8,23 @@
 <body class="popup">
 
 <header class="ust">
-  <div class="ust-ara">
-    <svg class="ikon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-    <input type="search" id="ara" placeholder="Search…" data-i18n-ph="ara" data-i18n-aria="araAria"
-           aria-label="Search accounts" autocomplete="off">
+  <div class="ust-mark">
+    <span class="marka-yazi" aria-hidden="true">EXTE<small>SE</small></span>
   </div>
-  <button type="button" id="ekleAc" class="duz dar" data-i18n-aria="hesapEkle" data-i18n-title="hesapEkle"
-          aria-label="Add account" title="Add account">
-    <svg class="ikon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-  </button>
-  <button type="button" id="ayarlarAc" class="duz dar" data-i18n-aria="ayarlarAc" data-i18n-title="ayarlarAc"
-          aria-label="Settings and backup" title="Settings and backup">
-    <svg class="ikon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-  </button>
+  <span class="ust-guven" aria-hidden="true">LOCAL · 0 NETWORK</span>
+  <div class="ust-sag">
+    <button type="button" id="ayarlarAc" class="duz dar" data-i18n-aria="ayarlarAc" data-i18n-title="ayarlarAc"
+            aria-label="Settings and backup" title="Settings and backup">
+      <svg class="ikon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
 </header>
+
+<div class="ust-ara">
+  <svg class="ikon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+  <input type="search" id="ara" placeholder="Search…" data-i18n-ph="ara" data-i18n-aria="araAria"
+         aria-label="Search accounts" autocomplete="off">
+</div>
 
 <main class="govde">
 
@@ -51,7 +54,14 @@
 
   <!-- hesap ekleme -->
   <section id="gorunumEkle" hidden aria-labelledby="ekleBaslik">
-    <h1 id="ekleBaslik" data-i18n="hesapEkle">Add account</h1>
+    <div class="ekle-bas">
+      <button type="button" id="ekleKapat" class="geri" data-i18n-aria="listeyeDon" data-i18n-title="listeyeDon"
+              aria-label="Back to list" title="Back to list">
+        <svg class="ikon" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <h1 id="ekleBaslik" data-i18n="hesapEkle">Add account</h1>
+      <span class="aes-rozet" aria-hidden="true">AES-256</span>
+    </div>
 
     <div class="sekmeler" role="tablist" data-i18n-aria="eklemeYontemi" aria-label="Add method">
       <button type="button" class="sekme" role="tab" id="sekQr"  aria-selected="true"  aria-controls="panelQr"  data-i18n="sekmeQr">QR</button>
@@ -61,8 +71,10 @@
 
     <div id="panelQr" role="tabpanel" aria-labelledby="sekQr">
       <p class="ipucu" data-i18n="qrIpucu">Scan the QR code while it is visible on screen, or read it from an image file.</p>
-      <button type="button" id="qrEkran" class="birincil" data-i18n="qrEkrandanTara">Scan from screen</button>
-      <button type="button" id="qrDosyaAc" data-i18n="qrResimdenOku">Read from image</button>
+      <div class="aacts">
+        <button type="button" id="qrEkran" class="birincil" data-i18n="qrEkrandanTara">Scan from screen</button>
+        <button type="button" id="qrDosyaAc" data-i18n="qrResimdenOku">Read from image</button>
+      </div>
       <input type="file" id="qrDosya" accept="image/*" hidden>
       <p class="ipucu" data-i18n="qrPanoIpucu">You can also paste a QR image into this window with Ctrl+V.</p>
       <p id="qrDurum" class="ipucu" role="status"></p>
@@ -115,14 +127,18 @@
       </form>
     </div>
 
-    <p><button type="button" id="ekleKapat" class="duz">
-      <svg class="ikon" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-      <span data-i18n="listeyeDon">← Back to list</span>
-    </button></p>
     <p id="ekleHata" class="ipucu hata-metin" role="alert"></p>
   </section>
 
 </main>
+
+<footer class="alt">
+  <button type="button" id="ekleAc" class="ekle-btn" data-i18n-aria="hesapEkle" data-i18n-title="hesapEkle"
+          aria-label="Add account" title="Add account">
+    <svg class="ikon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+    <span data-i18n="hesapEkle">Add account</span>
+  </button>
+</footer>
 
 <p id="canliDurum" class="atla" role="status" aria-live="polite"></p>
 
