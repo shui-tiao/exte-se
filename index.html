@@ -66,12 +66,6 @@
   .placeholder b{color:var(--marka-ink);font-weight:500}
   .note{margin:0;font-family:var(--mono);font-size:8px;letter-spacing:.06em;color:var(--mute);text-transform:uppercase}
 
-  .points{list-style:none;margin:28px 0 0;padding:0;border-top:1px solid var(--kenar)}
-  .points li{display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--kenar);font-size:12px;color:var(--mute)}
-  .points b{font-family:var(--mono);font-size:8px;font-weight:500;letter-spacing:.05em;color:var(--marka-ink)}
-  .points span{color:var(--metin)}
-  .points span i{font-style:normal;color:var(--mute)}
-
   /* ---------- one interface hint ---------- */
   .preview{justify-self:end;width:100%;max-width:344px}
   .preview__label{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;font-family:var(--mono);font-size:7px;letter-spacing:.11em;text-transform:uppercase;color:var(--mute)}
@@ -148,25 +142,20 @@
     .stage{grid-template-columns:1fr;gap:0}
     .preview{display:none}
     .copy{padding:0}
-    .points{margin-top:22px}
   }
   @media (max-width:560px){
     h1{font-size:clamp(36px,10vw,46px)}
     .lede{font-size:13.5px;margin-bottom:22px}
     .cta{height:46px;padding:0 18px;font-size:12.5px}
-    .points li{font-size:11px;padding:7px 0}
     .status .sep,.status .storetext{display:none}
     .foot .right{display:none}
   }
   @media (max-height:720px){
     h1{font-size:clamp(36px,5vw,58px);margin-bottom:14px}
     .lede{margin-bottom:20px;line-height:1.65}
-    .points{margin-top:18px}
-    .points li{padding:6px 0}
     .copy{padding:0}
   }
   @media (max-height:600px){
-    .points{display:none}
     .note{display:none}
     .stage{grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr)}
     .preview{display:block;max-width:300px}
@@ -208,12 +197,6 @@
         <span class="placeholder">LINK — <b>待填</b></span>
       </div>
       <p class="note">Chrome 116+ · 开发者模式加载 · 商店链接待填</p>
-
-      <ul class="points">
-        <li><b>01</b><span>TOTP / HOTP <i>·</i> SHA-1 / 256 / 512 <i>·</i> 6–8 位 <i>·</i> 30 / 60 秒</span></li>
-        <li><b>02</b><span>四种添加 <i>·</i> 屏幕扫码 / 图片 / otpauth 链接 / 手动</span></li>
-        <li><b>03</b><span>密码锁与加密备份 <i>·</i> AES-256-GCM <i>·</i> 数据只在本机</span></li>
-      </ul>
     </section>
 
     <aside class="preview" aria-hidden="true">
@@ -309,5 +292,6 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="extensions/src/site.js"></script>
 <script src="site.js"></script>
+<script src="swarm-build.js"></script>
 </body>
 </html>
